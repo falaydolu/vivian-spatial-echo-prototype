@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Spatial Echo | Archive</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --paper: #f2eee3; --ink: #1a1a1a; --texture: url('https://www.transparenttextures.com/patterns/cream-paper.png'); }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #d9d4c7; font-family: 'Space Mono', monospace; display: flex; align-items: center; justify-content: center; }
+        
+        .folder { position: relative; width: 380px; height: 600px; background: var(--paper); background-image: var(--texture); border-radius: 0 20px 20px 20px; box-shadow: 20px 20px 60px rgba(0,0,0,0.2); display: flex; flex-direction: column; align-items: center; padding: 40px; box-sizing: border-box; }
+
+        /* 左侧 Tab: Spatial Echo */
+        .tab { position: absolute; left: -35px; top: 40px; width: 35px; height: 180px; background: var(--paper); background-image: var(--texture); border-radius: 12px 0 0 12px; display: flex; align-items: center; justify-content: center; box-shadow: -5px 5px 15px rgba(0,0,0,0.05); }
+        .tab-text { transform: rotate(-90deg); white-space: nowrap; font-size: 13px; font-weight: 700; letter-spacing: 3px; color: var(--ink); text-transform: uppercase; }
+
+        /* Camera Window */
+        .camera-window { width: 100%; aspect-ratio: 3 / 4; background: #000; border: 1px solid rgba(0,0,0,0.1); overflow: hidden; margin-bottom: 50px; position: relative; }
+        #camera-feed { width: 100%; height: 100%; object-fit: cover; }
+
+        .find-btn { background: var(--ink); color: #fff; border: none; padding: 18px 45px; font-family: inherit; font-size: 14px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; cursor: pointer; }
+
+        /* Loading Overlay */
+        #loader { position: absolute; inset: 0; background: var(--paper); background-image: var(--texture); z-index: 100; display: none; flex-direction: column; align-items: center; justify-content: center; border-radius: 0 20px 20px 20px; text-align: center; padding: 20px; }
+        .spinner { width: 30px; height: 30px; border: 2px solid var(--ink); border-top-color: transparent; border-radius: 50%; animation: spin 1s infinite linear; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .status-msg { margin-top: 20px; font-size: 10px; letter-spacing: 1px; line-height: 1.5; }
+    </style>
+</head>
+<body>
+
+    <div class="folder">
+        <div class="tab"><div class="tab-text">Spatial Echo</div></div>
+
+        <div class="camera-window">
+            <video id="camera-feed" autoplay playsinline></video>
+        </div>
+
+        <button class="find-btn" onclick="initializeArchive()">Find Archive</button>
+
+        <div id="loader">
+            <div class="spinner"></div>
+            <p class="status-msg" id="loader-text">INITIALIZING TEMPORAL SCAN...</p>
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('camera-feed');
+
+        // 核心：强制开启摄像头
+        async function setupCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "environment" } 
+                });
+                video.srcObject = stream;
+            } catch (err) {
+                console.warn("Camera failed, trying fallback:", err);
+                navigator.mediaDevices.getUserMedia({ video: true })
+                    .then(s => { video.srcObject = s; });
+            }
+        }
+
+        // 页面加载即尝试开启摄像头
+        setupCamera();
+
+        function initializeArchive() {
+            const loader = document.getElementById('loader');
+            const loaderText = document.getElementById('loader-text');
+            loader.style.display = 'flex';
+
+            // 1. 请求地理位置
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const lat = position.coords.latitude.toFixed(2);
+                        const lon = position.coords.longitude.toFixed(2);
+                        loaderText.innerHTML = `SIGNAL LOCKED: ${lat}°N, ${lon}°E<br>UNFOLDING ARCHIVE...`;
+                        
+                        // 2. 定位成功后跳转
+                        setTimeout(() => {
+                            window.location.href = 'index2.html';
+                        }, 2000);
+                    },
+                    (error) => {
+                        loaderText.innerText = "GPS SIGNAL WEAK. FORCING CONNECTION...";
+                        setTimeout(() => { window.location.href = 'index2.html'; }, 2000);
+                    }
+                );
+            } else {
+                setTimeout(() => { window.location.href = 'index2.html'; }, 2000);
+            }
+        }
+    </script>
+</body>
+</html>

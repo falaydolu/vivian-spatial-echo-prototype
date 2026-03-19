@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Spatial Echo | The Act</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --paper: #f2eee3; --ink: #1a1a1a; --texture: url('https://www.transparenttextures.com/patterns/cream-paper.png'); }
+        
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; font-family: 'Space Mono', monospace; }
+
+        /* Full Screen Reality (Camera) */
+        #camera-bg {
+            position: fixed; inset: 0; width: 100%; height: 100%;
+            object-fit: cover; z-index: 1;
+            /* 可选：给现实增加一点点旧照片的质感 */
+            filter: sepia(0.2) contrast(1.1);
+        }
+
+        /* Script Paper (Bottom Piece) */
+        .script-paper {
+            position: fixed;
+            bottom: 0; left: 0; width: 100%;
+            background-color: var(--paper);
+            background-image: var(--texture);
+            z-index: 10;
+            padding: 40px 20px 60px 20px;
+            box-sizing: border-box;
+            border-top: 2px solid var(--ink);
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* 确保所有内容水平居中 */
+            text-align: center; /* 文本居中 */
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.3);
+        }
+
+        .scene-header {
+            font-size: 10px;
+            letter-spacing: 3px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 25px;
+            color: rgba(26, 26, 26, 0.6);
+        }
+
+        .script-body {
+            max-width: 320px;
+            color: var(--ink);
+        }
+
+        .role-title {
+            font-size: 16px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .stage-direction {
+            font-size: 13px;
+            font-style: italic;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .mission-instruction {
+            font-size: 13px;
+            line-height: 1.6;
+            font-weight: 400;
+            display: block;
+        }
+
+        .exit-link {
+            margin-top: 40px;
+            font-size: 10px;
+            text-decoration: underline;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+
+    <video id="camera-bg" autoplay playsinline></video>
+
+    <div class="script-paper">
+        <div class="scene-header" id="scene-meta">Session Active</div>
+        
+        <div class="script-body">
+            <span class="role-title" id="role-name">THE PROTAGONIST</span>
+            
+            <span class="stage-direction" id="stage-desc">
+                The air around you starts to ripple. 
+                You are standing where a secret was once kept.
+            </span>
+            
+            <span class="mission-instruction" id="mission-text">
+                Look at the person nearest to you. 
+                They are carrying a message from 1923. 
+                Walk towards them without making eye contact.
+            </span>
+        </div>
+
+        <div class="exit-link" onclick="window.location.href='index1.html'">Close Archive</div>
+    </div>
+
+    <script>
+        // 开启全屏摄像头
+        navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}})
+            .then(s => { document.getElementById('camera-bg').srcObject = s; });
+
+        // 从本地存储读取你在第二页选的故事
+        window.onload = () => {
+            const savedStory = JSON.parse(localStorage.getItem('selectedStory'));
+            if (savedStory) {
+                document.getElementById('scene-meta').innerText = `Spatial Connection: ${savedStory.tab}`;
+                
+                // 根据不同故事定制 Page 3 的剧本内容
+                if (savedStory.tab === "1920s") {
+                    document.getElementById('role-name').innerText = "THE COURIER";
+                    document.getElementById('stage-desc').innerText = "The stone pillars of Sather Gate are cold. You feel the weight of the leather satchel in your hand.";
+                    document.getElementById('mission-text').innerText = "Locate the misplaced key carved into the stone. Once found, wait for the architect's signal.";
+                } else if (savedStory.tab === "NOIR") {
+                    document.getElementById('role-name').innerText = "THE OUTSIDER";
+                    document.getElementById('stage-desc').innerText = "Midnight, 1948. Rain has just washed the streets of Berkeley. Shadows are your only allies.";
+                    document.getElementById('mission-text').innerText = "Find the woman in the red coat. She is waiting under the flickering street lamp. Do not speak first.";
+                } else {
+                    document.getElementById('role-name').innerText = "THE ECO-SCOUT";
+                    document.getElementById('stage-desc').innerText = "The year is 2049. Concrete has surrendered to moss. The air smells of damp earth and ozone.";
+                    document.getElementById('mission-text').innerText = "Search the roots of the central oak tree. The last digital seed of the library is buried here.";
+                }
+            }
+        };
+    </script>
+</body>
+</html>
