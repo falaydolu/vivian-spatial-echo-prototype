@@ -9,28 +9,12 @@
         :root { --paper: #f2eee3; --ink: #1a1a1a; --texture: url('https://www.transparenttextures.com/patterns/cream-paper.png'); }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; font-family: 'Space Mono', monospace; }
         #camera-bg { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
-
-        /* AR Navigation */
         #nav-guide { position: fixed; top: 30%; left: 50%; transform: translate(-50%, -50%); z-index: 5; text-align: center; color: white; display: flex; flex-direction: column; align-items: center; pointer-events: none; }
         .arrow { font-size: 80px; transition: transform 0.1s; filter: drop-shadow(0 0 10px rgba(255,255,255,0.5)); }
         .distance { font-size: 14px; font-weight: 700; background: rgba(0,0,0,0.7); padding: 5px 15px; border-radius: 20px; margin-top: 10px; pointer-events: auto; }
-
-        /* Script Paper */
-        .script-paper {
-            position: fixed; bottom: 0; left: 0; width: 100%;
-            background-color: var(--paper); background-image: var(--texture);
-            z-index: 10; padding: 40px 25px 60px 25px; box-sizing: border-box;
-            border-top: 2px solid var(--ink); display: flex; flex-direction: column; align-items: center; text-align: center;
-        }
-
+        .script-paper { position: fixed; bottom: 0; left: 0; width: 100%; background-color: var(--paper); background-image: var(--texture); z-index: 10; padding: 40px 25px 60px 25px; box-sizing: border-box; border-top: 2px solid var(--ink); display: flex; flex-direction: column; align-items: center; text-align: center; box-shadow: 0 -10px 40px rgba(0,0,0,0.5); }
         .role-title { font-size: 16px; font-weight: 700; text-transform: uppercase; margin-bottom: 15px; border-bottom: 2px solid var(--ink); padding-bottom: 5px; }
-        
-        /* 打字机动画效果 */
-        .mission-text { 
-            font-size: 13px; line-height: 1.6; font-weight: 400; 
-            display: block; max-width: 320px; min-height: 80px;
-        }
-
+        .mission-text { font-size: 13px; line-height: 1.6; font-weight: 400; display: block; max-width: 320px; min-height: 80px; }
         .exit { margin-top: 35px; font-size: 10px; text-decoration: underline; opacity: 0.4; cursor: pointer; }
     </style>
 </head>
@@ -39,100 +23,93 @@
     <div id="nav-guide">
         <div class="arrow" id="arrow-icon">↑</div>
         <div class="distance" id="dist-val" onclick="simulateArrival()">SYNCING...</div>
-        <div style="font-size: 10px; margin-top: 5px; text-transform: uppercase;" id="target-name">ARCHIVE SEARCH</div>
+        <div style="font-size: 10px; margin-top: 5px; text-transform: uppercase;" id="target-name">SEARCHING...</div>
     </div>
-
     <div class="script-paper">
-        <div id="scene-tag" style="font-size: 9px; opacity: 0.5; margin-bottom: 20px; letter-spacing: 2px;">LIVE CONNECTION</div>
-        <span class="role-title" id="role-name">ROLE</span>
+        <div style="font-size: 9px; opacity: 0.5; margin-bottom: 20px; letter-spacing: 2px;">LIVE CONNECTION</div>
+        <span class="role-title" id="role-name">THE ECHO</span>
         <span class="mission-text" id="mission-body"></span>
         <div class="exit" onclick="window.location.href='index.html'">CLOSE ARCHIVE</div>
     </div>
 
-    <script>
-        navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}}).then(s => { document.getElementById('camera-bg').srcObject = s; });
+<script>
+    navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}}).then(s => { document.getElementById('camera-bg').srcObject = s; });
 
-        const archiveWaypoints = {
-            "OPPENHEIMER'S OFFICE": [{lat:37.8732,lon:-122.2575,name:"Physics North"}, {lat:37.8728,lon:-122.2568,name:"LeConte Hall"}],
-            "THE GATSBY PARTY": [{lat:40.7512,lon:-74.0086,name:"Hudson Pier"}, {lat:40.7515,lon:-74.0100,name:"Green Light"}],
-            "THE INDOOR RAILWAY": [{lat:40.7410,lon:-74.0040,name:"Chelsea Freight Elevator"}, {lat:40.7420,lon:-74.0050,name:"Google NYC Entrance"}],
-            "THE GARAGE STARTUP": [{lat:37.4220,lon:-122.0840,name:"Charleston Rd Garage"}, {lat:37.4275,lon:-122.0848,name:"Googleplex Core"}]
-        };
+    const archiveWaypoints = {
+        "OPPENHEIMER'S OFFICE": [{lat:37.8732,lon:-122.2575,name:"Physics North"}, {lat:37.8728,lon:-122.2568,name:"LeConte Hall"}],
+        "THE GATSBY PARTY": [{lat:40.7512,lon:-74.0086,name:"Hudson Pier"}, {lat:40.7515,lon:-74.0100,name:"Green Light"}],
+        "THE INDOOR RAILWAY": [{lat:40.7410,lon:-74.0040,name:"Freight Terminal"}, {lat:40.7420,lon:-74.0050,name:"Google NYC HQ"}],
+        "THE GARAGE STARTUP": [{lat:37.4220,lon:-122.0840,name:"Garage Site"}, {lat:37.4275,lon:-122.0848,name:"Googleplex Core"}]
+    };
 
-        let currentStep = 0;
-        let selectedEcho = null;
-        let targetCoords = { lat: 0, lon: 0 };
+    let currentStep = 0, selectedEcho = null, targetCoords = { lat: 0, lon: 0 };
 
-        window.onload = () => {
-            selectedEcho = JSON.parse(localStorage.getItem('selectedStory'));
-            if (selectedEcho) {
-                document.getElementById('role-name').innerText = selectedEcho.role;
-                typeWriter(selectedEcho.act1);
-                const wp = archiveWaypoints[selectedEcho.title] || [{lat:0,lon:0,name:"Unknown"}];
-                targetCoords = wp[0];
-                document.getElementById('target-name').innerText = "TARGET: " + targetCoords.name;
-            }
-            startTracking();
-        };
-
-        function typeWriter(text) {
-            const element = document.getElementById('mission-body');
-            element.innerHTML = "";
-            let i = 0;
-            const cleanText = text.replace(/<b>|<\/b>/g, '');
-            function type() {
-                if (i < cleanText.length) {
-                    element.innerHTML += cleanText.charAt(i);
-                    i++;
-                    setTimeout(type, 30);
-                }
-            }
-            type();
+    window.onload = () => {
+        selectedEcho = JSON.parse(localStorage.getItem('selectedStory'));
+        if (selectedEcho) {
+            document.getElementById('role-name').innerText = selectedEcho.role;
+            typeWriter(selectedEcho.act1);
+            const wp = archiveWaypoints[selectedEcho.title] || [{lat:0,lon:0,name:"Unknown Location"}];
+            targetCoords = wp[0];
+            document.getElementById('target-name').innerText = "TARGET: " + targetCoords.name;
         }
+        startTracking();
+    };
 
-        function startTracking() {
-            navigator.geolocation.watchPosition((pos) => {
-                const uLat = pos.coords.latitude;
-                const uLon = pos.coords.longitude;
-                const dist = calculateDistance(uLat, uLon, targetCoords.lat, targetCoords.lon);
-                document.getElementById('dist-val').innerText = (dist > 5000) ? "REMOTE MODE" : dist + " METERS";
-                
-                if (dist < 15 && currentStep === 0) arriveAtCheckpoint();
-
-                const bearing = calculateBearing(uLat, uLon, targetCoords.lat, targetCoords.lon);
-                window.addEventListener('deviceorientationabsolute', (e) => {
-                    document.getElementById('arrow-icon').style.transform = `rotate(${bearing - e.alpha}deg)`;
-                });
-            }, null, {enableHighAccuracy: true});
-        }
-
-        function simulateArrival() { arriveAtCheckpoint(); }
-
-        function arriveAtCheckpoint() {
-            if (currentStep === 0 && selectedEcho) {
-                currentStep = 1;
-                const wp = archiveWaypoints[selectedEcho.title];
-                if(wp) targetCoords = wp[1];
-                document.getElementById('target-name').innerText = "FINAL: " + (targetCoords.name || "Checkpoint");
-                typeWriter(selectedEcho.act2);
-                document.querySelector('.script-paper').style.backgroundColor = "#fff9eb";
-                setTimeout(()=> document.querySelector('.script-paper').style.backgroundColor="var(--paper)", 500);
+    function typeWriter(text) {
+        const element = document.getElementById('mission-body');
+        element.innerHTML = "";
+        let i = 0;
+        const cleanText = text.replace(/<b>|<\/b>/g, '');
+        function type() {
+            if (i < cleanText.length) {
+                element.innerHTML += cleanText.charAt(i);
+                i++;
+                setTimeout(type, 30);
             }
         }
+        type();
+    }
 
-        function calculateDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371e3;
-            const dLat = (lat2-lat1)*Math.PI/180;
-            const dLon = (lon2-lon1)*Math.PI/180;
-            const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
-            return Math.round(2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) * R);
-        }
+    function startTracking() {
+        navigator.geolocation.watchPosition((pos) => {
+            const uLat = pos.coords.latitude, uLon = pos.coords.longitude;
+            const dist = calculateDistance(uLat, uLon, targetCoords.lat, targetCoords.lon);
+            document.getElementById('dist-val').innerText = (dist > 5000) ? "REMOTE MODE" : dist + " METERS";
+            if (dist < 15 && currentStep === 0) arriveAtCheckpoint();
+            const bearing = calculateBearing(uLat, uLon, targetCoords.lat, targetCoords.lon);
+            window.addEventListener('deviceorientationabsolute', (e) => {
+                document.getElementById('arrow-icon').style.transform = `rotate(${bearing - e.alpha}deg)`;
+            });
+        }, null, {enableHighAccuracy: true});
+    }
 
-        function calculateBearing(lat1, lon1, lat2, lon2) {
-            const y = Math.sin((lon2-lon1)*Math.PI/180) * Math.cos(lat2*Math.PI/180);
-            const x = Math.cos(lat1*Math.PI/180)*Math.sin(lat2*Math.PI/180) - Math.sin(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.cos((lon2-lon1)*Math.PI/180);
-            return Math.atan2(y, x) * 180 / Math.PI;
+    function simulateArrival() { arriveAtCheckpoint(); }
+
+    function arriveAtCheckpoint() {
+        if (currentStep === 0 && selectedEcho) {
+            currentStep = 1;
+            const wp = archiveWaypoints[selectedEcho.title];
+            if(wp) targetCoords = wp[1];
+            document.getElementById('target-name').innerText = "FINAL TARGET: " + (targetCoords.name || "Endpoint");
+            typeWriter(selectedEcho.act2);
+            document.querySelector('.script-paper').style.backgroundColor = "#fff9eb";
+            setTimeout(()=> document.querySelector('.script-paper').style.backgroundColor="var(--paper)", 500);
         }
-    </script>
+    }
+
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371e3;
+        const dLat = (lat2-lat1)*Math.PI/180, dLon = (lon2-lon1)*Math.PI/180;
+        const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+        return Math.round(2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) * R);
+    }
+
+    function calculateBearing(lat1, lon1, lat2, lon2) {
+        const y = Math.sin((lon2-lon1)*Math.PI/180) * Math.cos(lat2*Math.PI/180);
+        const x = Math.cos(lat1*Math.PI/180)*Math.sin(lat2*Math.PI/180) - Math.sin(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.cos((lon2-lon1)*Math.PI/180);
+        return Math.atan2(y, x) * 180 / Math.PI;
+    }
+</script>
 </body>
 </html>
