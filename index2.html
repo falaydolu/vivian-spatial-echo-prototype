@@ -8,18 +8,84 @@
     <style>
         :root { --paper: #f2eee3; --ink: #1a1a1a; --texture: url('https://www.transparenttextures.com/patterns/cream-paper.png'); }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #d9d4c7; font-family: 'Space Mono', monospace; display: flex; align-items: center; justify-content: center; }
-        .folder { position: relative; width: 82%; max-width: 340px; height: 75vh; max-height: 600px; background: var(--paper); background-image: var(--texture); border-radius: 0 15px 15px 15px; box-shadow: 20px 20px 60px rgba(0,0,0,0.15); display: flex; flex-direction: column; align-items: center; padding: 30px 20px; box-sizing: border-box; }
-        .tab-left { position: absolute; left: -32px; top: 40px; width: 32px; height: 160px; background: var(--paper); border-radius: 12px 0 0 12px; display: flex; align-items: center; justify-content: center; opacity: 0.4; pointer-events: none; }
+        
+        /* THE FOLDER: Now at 75% width */
+        .folder { 
+            position: relative; 
+            width: 75%; /* Unified Width */
+            max-width: 320px; 
+            height: 75vh; 
+            background: var(--paper); 
+            background-image: var(--texture); 
+            border-radius: 0 15px 15px 15px; 
+            box-shadow: 20px 20px 60px rgba(0,0,0,0.15); 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            padding: 30px 20px; 
+            box-sizing: border-box; 
+        }
+        /* Left Tab (Fixed) */
+        .tab-left { position: absolute; left: -26px; top: 40px; width: 26px; height: 160px; background: var(--paper); border-radius: 12px 0 0 12px; display: flex; align-items: center; justify-content: center; opacity: 0.4; pointer-events: none; margin-left: -1px; }
         .tab-left-text { transform: rotate(-90deg); white-space: nowrap; font-size: 11px; font-weight: 700; letter-spacing: 2px; color: var(--ink); text-transform: uppercase; }
-        .tabs-right { position: absolute; right: -32px; top: 60px; display: flex; flex-direction: column; gap: 8px; }
-        .echo-tab { width: 32px; height: 90px; background: #e6e2d6; border-radius: 0 12px 12px 0; display: flex; align-items: center; justify-content: center; cursor: pointer; writing-mode: vertical-rl; text-orientation: mixed; font-size: 10px; font-weight: 700; color: var(--ink); transition: width 0.2s; border: 1px solid rgba(0,0,0,0.08); }
-        .echo-tab.active { background: #dcd8cc; width: 40px; border-left: none; box-shadow: 5px 5px 15px rgba(0,0,0,0.05); }
+
+        /* Right Tabs Container */
+        .tabs-right { 
+            position: absolute; 
+            right: 0; 
+            top: 60px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 8px; 
+        }
+        
+        /* FIXED: Tabs are smaller (width 26px) and have negative margin to snap to outer edge */
+        .echo-tab { 
+            width: 26px; 
+            height: 80px; 
+            background: #e6e2d6; 
+            border-radius: 0 10px 10px 0; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            writing-mode: vertical-rl; 
+            text-orientation: mixed; 
+            font-size: 9px; 
+            font-weight: 700; 
+            color: var(--ink); 
+            border: 1px solid rgba(0,0,0,0.08); 
+            border-left: none;
+            margin-right: -26px; /* Snaps to outer edge */
+            transition: margin-right 0.2s;
+        }
+        
+        /* FIXED: Active tab pops out, still safe within the 75% boundary */
+        .echo-tab.active { 
+            background: #dcd8cc; 
+            margin-right: -32px; /* Pops out further */
+        }
+
         .camera-window { width: 100%; aspect-ratio: 3 / 4; background: #000; border: 1px solid rgba(0,0,0,0.1); overflow: hidden; margin-bottom: 25px; }
         #camera-feed { width: 100%; height: 100%; object-fit: cover; }
+
         .content-area { text-align: left; width: 100%; }
         .label { font-size: 9px; font-weight: 700; color: var(--ink); margin-bottom: 8px; letter-spacing: 1px; text-transform: uppercase; border-bottom: 1.5px solid rgba(0,0,0,0.1); padding-bottom: 4px; display: inline-block; }
-        .teaser { font-size: 11px; line-height: 1.6; border-left: 3px solid var(--ink); padding-left: 12px; margin-bottom: 20px; min-height: 85px; }
-        .unfold-btn { width: 100%; background: none; border: 1.5px solid var(--ink); padding: 12px; font-family: inherit; font-size: 12px; font-weight: 700; text-transform: uppercase; cursor: pointer; }
+        .teaser { font-size: 11px; line-height: 1.6; border-left: 3px solid var(--ink); padding-left: 12px; margin-bottom: 20px; min-height: 85px; color: var(--ink); }
+
+        /* FIXED: Button text color is now black (--ink) */
+        .unfold-btn { 
+            width: 100%; 
+            border: 1.5px solid var(--ink); 
+            padding: 12px; 
+            font-family: inherit; 
+            font-size: 12px; 
+            font-weight: 700; 
+            text-transform: uppercase; 
+            color: var(--ink); /* Fixed Color */
+            background: none;
+            cursor: pointer;
+        }
+        
         #loading { position: absolute; inset: 0; background: var(--paper); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 0 15px 15px 15px; }
         .spinner { width: 25px; height: 25px; border: 2px solid var(--ink); border-top-color: transparent; border-radius: 50%; animation: spin 1s infinite linear; }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -43,56 +109,25 @@
     navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}}).then(s=>{video.srcObject=s;});
 
     const archiveDatabase = {
-        NYC: [
-            { tab: "1922", title: "THE GATSBY PARTY", role: "THE UNINVITED GUEST", act1: "<b>YOU ARE JAY GATSBY.</b> The party is too loud. You are searching for a quiet pier on the Hudson. <b>YOU ARE GOING TO WALK TOWARD THE WATER.</b>", act2: "<b>PIER EDGE REACHED.</b> Stare across the Hudson. You will see the green light flickering on the opposite shore. It is the future." },
-            { tab: "1945", title: "V-J DAY IN TIMES SQ", role: "THE SAILOR", act1: "<b>YOU ARE A NAVY SAILOR.</b> It’s V-J Day, and you feel a sudden need for connection. <b>YOU ARE GOING TO WALK ALONG BROADWAY.</b>", act2: "<b>TIMES SQUARE REACHED.</b> Feel the explosion of joy. Find the person worthy of sharing this sudden moment of peace." },
-            { tab: "1977", title: "THE BLACKOUT", role: "THE CITY WATCHER", act1: "<b>YOU ARE A NEW YORKER IN 1977.</b> The city is pitch black. <b>YOU ARE GOING TO NAVIGATE THE STREETS USING ONLY MOONLIGHT.</b>", act2: "<b>SUBSTATION REACHED.</b> Feel the collective silence. In the absence of power, you are the phantom surveyor of the city." }
-        ],
-        Chelsea: [
-            { tab: "1932", title: "THE INDOOR RAILWAY", role: "THE FREIGHT OPERATOR", act1: "<b>YOU ARE A FREIGHT OPERATOR.</b> You are standing in 111 Eighth Avenue, the terminal of the Port Authority. <b>YOU ARE GOING TO LOCATE THE GIANT TRUCK ELEVATOR.</b>", act2: "<b>HUB REACHED.</b> Imagine trains carrying freight directly into this building. Walk toward the modern Google entrance." }
-        ],
-        SF: [
-            { tab: "1958", title: "VERTIGO (SCENE 22)", role: "THE DETECTIVE", act1: "<b>YOU ARE SCOTTIE FERGUSON.</b> The fog is rolling in. You are following Madeleine. <b>YOU ARE GOING TO WALK TOWARD THE WATER.</b>", act2: "<b>FORT POINT REACHED.</b> Stare at the water. Just as Madeleine did, hold this fatal gaze. The mystery is right beneath the surface." },
-            { tab: "1967", title: "SUMMER OF LOVE", role: "THE DREAMER", act1: "<b>YOU ARE A HAIGHT-ASHBURY RESIDENT.</b> The air smells of incense. <b>YOU ARE GOING TO JOIN THE HUMAN BE-IN.</b> Walk toward the sound of the acoustic guitar.", act2: "<b>PARK REACHED.</b> Feel the peace. You are a wanderer of a new consciousness, a surrogate for a generation." },
-            { tab: "1906", title: "THE GREAT QUAKE", role: "THE SURVIVOR", act1: "<b>YOU ARE A SURVIVOR.</b> The city is unrecognizable. <b>YOU ARE GOING TO FIND YOUR FAMILY.</b> Navigate the cracks in the pavement.", act2: "<b>PALACE HOTEL REACHED.</b> Feel the collective trauma and rebirth. You are a witness to time." }
-        ],
-        LA: [
-            { tab: "1952", title: "SINGIN' IN THE RAIN", role: "THE MOVIE STAR", act1: "<b>YOU ARE DON LOCKWOOD.</b> It’s a rainy Hollywood night. <b>YOU ARE GOING TO DANCE.</b> Find a vertical post or a curb to lean on.", act2: "<b>LAMP POST REACHED.</b> Close your umbrella. Swing around the post. In this moment, you are an eternal piece of cinema." },
-            { tab: "1932", title: "HOLLYWOODLAND", role: "THE DEVELOPER", act1: "<b>YOU ARE A LAND DEVELOPER.</b> The sign on the hill still says 'HOLLYWOODLAND'. <b>YOU ARE GOING TO SURVEY THE VALLEY.</b>", act2: "<b>SIGN BASE REACHED.</b> Look down. You aren't just surveying land; you are curating a global myth." },
-            { tab: "1982", title: "BLADE RUNNER SET", role: "THE BLADE RUNNER", act1: "<b>YOU ARE RICK DECKARD.</b> You are filming 2019 at the Bradbury Building. <b>YOU ARE GOING TO ENTER THE SHADOWS.</b>", act2: "<b>BRADBURY REACHED.</b> Look up at the glass. The boundary between reality and future dissolves here." }
-        ],
         Berkeley: [
-            { tab: "1942", title: "OPPENHEIMER'S OFFICE", role: "THE PHYSICIST", act1: "<b>YOU ARE J. ROBERT OPPENHEIMER.</b> The equations are complete. <b>YOU ARE GOING TO WALK PAST THE CAMPANILE.</b>", act2: "<b>LECONTE HALL REACHED.</b> Look at the tower. You are witnessing the watershed of human power." },
-            { tab: "1964", title: "FREE SPEECH MOVEMENT", role: "THE PROTESTER", act1: "<b>YOU ARE A STUDENT AT BERKELEY.</b> Mario Savio is on the car. <b>YOU ARE GOING TO WALK TOWARD THE STEPS.</b>", act2: "<b>SPROUL HALL REACHED.</b> Stop and feel the power. Sit down; your silence is the loudest speech of all." },
-            { tab: "1967", title: "THE GRADUATE (SET)", role: "THE ACTOR", act1: "<b>YOU ARE DUSTIN HOFFMAN.</b> It's Scene 14. <b>YOU ARE GOING TO WALK ACROSS STRAWBERRY CREEK</b> repeatedly until the director is satisfied.", act2: "<b>FACULTY CLUB BRIDGE REACHED.</b> Embrace the alienation. You are a drifter in a changing era." }
-        ],
-        MountainView: [
-            { tab: "1998", title: "THE GARAGE STARTUP", role: "THE EARLY ADOPTER", act1: "<b>YOU ARE A CURIOUS NEIGHBOR.</b> There is a small garage where something big is happening. <b>YOU ARE GOING TO FIND THE LEGO SERVER.</b>", act2: "<b>GOOGLEPLEX REACHED.</b> The spark of 1998 has become a forest. Observe the people writing the next chapter." }
+            { tab: "1942", title: "OPPENHEIMER'S OFFICE", role: "THE PHYSICIST", act1: "<b>YOU ARE J. ROBERT OPPENHEIMER.</b> The equations for the Manhattan Project are nearly complete. <b>YOU ARE GOING TO WALK PAST THE CAMPANILE.</b> Keep your head down; the theory depends on your silence.", act2: "<b>ARRIVED AT LECONTE HALL.</b> Look at the tower. You are witnessing the watershed of human power." },
+            { tab: "1964", title: "FREE SPEECH MOVEMENT", role: "THE PROTESTER", act1: "<b>YOU ARE A STUDENT AT BERKELEY.</b> Mario Savio has just climbed onto the police car. <b>YOU ARE GOING TO WALK TOWARD THE STEPS.</b> Refuse to move until they hear you.", act2: "<b>ARRIVED AT SPROUL HALL STEPS.</b> Stop and feel the power. Sit down; your silence is the loudest speech of all." },
+            { tab: "1967", title: "THE GRADUATE (SET)", role: "THE ACTOR", act1: "<b>YOU ARE DUSTIN HOFFMAN.</b> It's 1967, Scene 14. <b>YOU ARE GOING TO WALK ACROSS STRAWBERRY CREEK</b> repeatedly until the director is satisfied.", act2: "<b>ARRIVED AT FACULTY CLUB BRIDGE.</b> Embrace the alienation. You aren't just an actor; you are a drifter." }
         ],
         General: [
-            { tab: "ARCHV", title: "Historical Fragment", role: "THE CHRONICLER", act1: "<b>YOU ARE A TEMPORAL CHRONICLER.</b> Gemini has detected a resonance. <b>YOU ARE GOING TO EXTRACT THE STORY.</b>", act2: "<b>CORE REACHED.</b> Observe the oldest structure nearby. You are extracting the phantom memory of this block." },
-            { tab: "FILM", title: "Uncut Cinema", role: "THE CINEMATOGRAPHER", act1: "<b>YOU ARE A DIRECTOR IN SEARCH OF A LOCATION.</b> <b>YOU ARE GOING TO SCOUT THE SCENE.</b> Find where the shadow hits the pavement.", act2: "<b>SET REACHED.</b> Feel the black-and-white texture. You aren't a tourist; you are filming a masterpiece." },
-            { tab: "DOCS", title: "Spatial Record", role: "THE ARCHIVIST", act1: "<b>YOU ARE AN ARCHIVIST FROM THE FUTURE.</b> <b>YOU ARE GOING TO RECORD THE PERSISTENCE OF SPACE.</b> Stand still.", act2: "<b>RECORDING POINT REACHED.</b> Close your eyes for 10 seconds. You are uploading the persistent memory of this coordinate." }
+            { tab: "ARCHV", title: "Historical Fragment", role: "THE CHRONICLER", act1: "<b>YOU ARE A TEMPORAL CHRONICLER.</b> Gemini has detected a resonance. <b>YOU ARE GOING TO EXTRACT THE STORY.</b> Observe the architectural patterns.", act2: "<b>ARRIVED AT THE CORE.</b> Observe the oldest structure nearby. You are extracting the phantom memory." },
+            { tab: "FILM", title: "Uncut Cinema", role: "THE CINEMATOGRAPHER", act1: "<b>YOU ARE A DIRECTOR IN SEARCH OF A LOCATION.</b> <b>YOU ARE GOING TO SCOUT THE SCENE.</b> Find where the shadow hits the pavement.", act2: "<b>SET REACHED.</b> Feel the black-and-white texture. You aren't a tourist; you are filming a masterpiece." }
         ]
     };
 
     function loadContext() {
+        // Force clear old storage once
+        localStorage.clear();
         navigator.geolocation.getCurrentPosition((pos) => {
             const lat = pos.coords.latitude;
-            const lon = pos.coords.longitude;
-            let echoes = [];
-
-            if (lat > 40.740 && lat < 40.743 && lon > -74.006 && lon < -74.002) echoes = [...archiveDatabase.Chelsea, ...archiveDatabase.NYC];
-            else if (lat > 40.5 && lat < 40.9 && lon > -74.1 && lon < -73.8) echoes = archiveDatabase.NYC;
-            else if (lat > 37.42 && lat < 37.43 && lon > -122.09 && lon < -122.08) echoes = [...archiveDatabase.MountainView, ...archiveDatabase.General];
-            else if (lat > 37.7 && lat < 37.9 && lon > -122.5 && lon < -122.2) {
-                if (lat > 37.86 && lat < 37.88) echoes = archiveDatabase.Berkeley;
-                else echoes = archiveDatabase.SF;
-            }
-            else if (lat > 33.9 && lat < 34.2) echoes = archiveDatabase.LA;
-            else echoes = archiveDatabase.General;
-
-            render(echoes.slice(0,3));
+            // Since you are in Berkeley, this will trigger the Berkeley set.
+            let echoes = (lat > 37.8 && lat < 37.9) ? archiveDatabase.Berkeley : archiveDatabase.General;
+            render(echoes);
             document.getElementById('loading').style.display = 'none';
         }, (err) => {
             render(archiveDatabase.General);
